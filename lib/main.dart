@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MyApp());
 }
 
@@ -20,7 +26,20 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    initializeFirebase();
     loadModel();
+  }
+
+  /// Firebase'in düzgün çalıştığını kontrol eden fonksiyon
+  Future<void> initializeFirebase() async {
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      print("✅ Firebase başarıyla başlatıldı!");
+    } catch (e) {
+      print("❌ Firebase başlatılırken hata oluştu: $e");
+    }
   }
 
   Future<void> loadModel() async {
@@ -45,7 +64,7 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
-        appBar: AppBar(title: Text("TensorFlow Lite Test")),
+        appBar: AppBar(title: Text("TensorFlow Lite & Firebase Test")),
         body: Column(
           children: [
             _image == null

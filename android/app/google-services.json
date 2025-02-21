@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "825513133230",
+    "project_id": "inventorycounter-f3f12",
+    "storage_bucket": "inventorycounter-f3f12.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:825513133230:android:118d174a86e98406bb993f",
+        "android_client_info": {
+          "package_name": "com.example.inventory_counter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjFa3KdCMKJ-xuATqnf7U6gzpfBrpzLdc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
