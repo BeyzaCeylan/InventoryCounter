@@ -42,8 +42,17 @@ class _MyAppState extends State<MyApp> {
   /// 📌 TensorFlow Lite Modelini Yükleme Fonksiyonu
   Future<void> loadModel() async {
     try {
-      interpreter = await Interpreter.fromAsset('assets/mobilenet_ssd.tflite');
+      var interpreterOptions = InterpreterOptions();
+      interpreter = await Interpreter.fromAsset(
+        'assets/mobilenet_ssd.tflite',
+        options: interpreterOptions,
+      );
+
+      // Model giriş ve çıkış bilgilerini terminale yazdır
       print('✅ Model başarıyla yüklendi!');
+      print('📌 Model giriş şekli: ${interpreter.getInputTensor(0).shape}');
+      print('📌 Model çıkış şekli: ${interpreter.getOutputTensor(0).shape}');
+      print('📌 Model giriş tipi: ${interpreter.getInputTensor(0).type}');
     } catch (e) {
       print('❌ Model yüklenirken hata oluştu: $e');
     }
@@ -78,6 +87,8 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
+    print("📸 Resim başarıyla seçildi. Analiz başlatılıyor...");
+
     // 📌 Resmi yükle ve TensorFlow Lite için uygun boyuta getir (224x224)
     var imageBytes = image.readAsBytesSync();
     img.Image? imageInput = img.decodeImage(imageBytes);
@@ -86,26 +97,36 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
+    print("📌 Görüntü başarıyla decode edildi.");
+
     // 📌 Modelin beklediği giriş boyutu: 224x224
     img.Image resizedImage = img.copyResize(imageInput, width: 224, height: 224);
 
-    // 📌 Görüntüyü normalize et (0-1 arasına getir)
+    print("📌 Görüntü 224x224 boyutuna küçültüldü.");
+
+    // 📌 TensorFlow Lite için uygun format: [1, 224, 224, 3]
     List<List<List<List<double>>>> input = List.generate(1, (i) => 
-      List.generate(224, (j) => 
-        List.generate(224, (k) => List.filled(3, 0.0))));
+        List.generate(224, (j) => 
+          List.generate(224, (k) => List.filled(3, 0.0))));
 
     for (int y = 0; y < 224; y++) {
-    for (int x = 0; x < 224; x++) {
-      final pixel = resizedImage.getPixel(x, y);
-      input[0][y][x][0] = pixel.r / 255.0; // R (Kırmızı)
-      input[0][y][x][1] = pixel.g / 255.0; // G (Yeşil)
-      input[0][y][x][2] = pixel.b / 255.0; // B (Mavi)
+      for (int x = 0; x < 224; x++) {
+        final pixel = resizedImage.getPixel(x, y);
+        input[0][y][x][0] = pixel.r.toDouble() / 255.0; // R (Kırmızı)
+        input[0][y][x][1] = pixel.g.toDouble() / 255.0; // G (Yeşil)
+        input[0][y][x][2] = pixel.b.toDouble() / 255.0; // B (Mavi)
+      }
     }
-  }
 
+    print("📌 Model giriş verisi hazır.");
+
+    // Modelin beklediği çıktıyı al
     var output = List.generate(1, (i) => List.filled(labels.length, 0.0));
 
+    // 📌 Modeli çalıştır ve tahminleri al
     interpreter.run(input, output);
+
+    print("✅ Model çalıştırıldı! Sonuçlar alındı.");
 
     setState(() {
       detectedObjects = output[0]
@@ -150,10 +171,10 @@ class _MyAppState extends State<MyApp> {
             ),
             SizedBox(height: 20),
             detectedObjects.isEmpty
-                ? Text("Henüz analiz yapılmadı.")
+                ? Text("⚠️ Nesne algılanamadı.", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
                 : Column(
                     children: detectedObjects
-                        .map((obj) => Text(obj, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)))
+                        .map((obj) => Text("🟢 Algılanan: $obj", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)))
                         .toList(),
                   ),
           ],
@@ -162,4 +183,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-
